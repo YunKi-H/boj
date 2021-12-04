@@ -31,3 +31,4 @@ int	main(void)
 	}
 	cout << max;
 }
+
