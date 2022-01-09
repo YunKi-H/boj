@@ -17,13 +17,53 @@
 // 출력
 // 각 테스트 케이스마다 한 줄에 출력하고, 각 줄에는 프로젝트 팀에 속하지 못한 학생들의 수를 나타내면 된다.
 #include <iostream>
-#include <queue>
-#include <utility>
-#include <algorithm>
 using namespace std;
+
+int board[100001];
+int vis[100001];
 
 int main()
 {
 	ios::sync_with_stdio(0);
 	cin.tie(0);
+	int t;
+	cin >> t;
+	while (t--)
+	{
+		int n, cnt = 0;
+		cin >> n;
+		for (int i = 1; i <= n; i++)
+		{
+			cin >> board[i];
+			vis[i] = 0;
+		}
+		for (int i = 1; i <= n; i++)
+		{
+			if (vis[i])
+				continue;
+			int now = i;
+			while (1)
+			{
+				vis[now] = i;
+				now = board[now];
+				if (vis[now] == i)
+				{
+					while (vis[now] != -1)
+					{
+						vis[now] = -1;
+						now = board[now];
+					}
+					break;
+				}
+				else if (vis[now] != 0)
+					break;
+			}
+		}
+		for (int i = 1; i <= n; i++)
+		{
+			if (vis[i] != -1)
+				cnt++;
+		}
+		cout << cnt << '\n';
+	}
 }
