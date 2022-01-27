@@ -1,91 +1,134 @@
-// 문제
-// 스타트링크의 사무실은 1×1크기의 정사각형으로 나누어져 있는 N×M 크기의 직사각형으로 나타낼 수 있다. 사무실에는 총 K개의 CCTV가 설치되어져 있는데, CCTV는 5가지 종류가 있다. 각 CCTV가 감시할 수 있는 방법은 다음과 같다.
+//https://www.acmicpc.net/problem/15683
+#include <iostream>
+#include <algorithm>
+#include <vector>
+#include <utility>
+using namespace std;
 
-// 1번	2번	3번	4번	5번
-// 1번 CCTV는 한 쪽 방향만 감시할 수 있다. 2번과 3번은 두 방향을 감시할 수 있는데, 2번은 감시하는 방향이 서로 반대방향이어야 하고, 3번은 직각 방향이어야 한다. 4번은 세 방향, 5번은 네 방향을 감시할 수 있다.
+int n, m, ans;
+int board[9][9];
+int dx[4] = {1, 0, -1, 0};
+int dy[4] = {0, 1, 0, -1};
+vector<pair<int, int> > cctv;
 
-// CCTV는 감시할 수 있는 방향에 있는 칸 전체를 감시할 수 있다. 사무실에는 벽이 있는데, CCTV는 벽을 통과할 수 없다. CCTV가 감시할 수 없는 영역은 사각지대라고 한다.
+void upd(int x, int y, int dir, bool rollback, int index)
+{
+	dir %= 4;
+	while (1)
+	{
+		x += dx[dir];
+		y += dy[dir];
+		if (x < 0 || x >= n || y < 0 || y >= m || board[x][y] == 6)
+			return;
+		if (board[x][y] > 0 && board[x][y] <= 5)
+			continue;
+		if (rollback && board[x][y] == 7 + index)
+		{
+			board[x][y] = 0;
+		}
+		else if (board[x][y] == 0)
+		{
+			board[x][y] = 7 + index;
+		}
+	}
+}
 
-// CCTV는 회전시킬 수 있는데, 회전은 항상 90도 방향으로 해야 하며, 감시하려고 하는 방향이 가로 또는 세로 방향이어야 한다.
+void solve(int index)
+{
+	if (index == cctv.size())
+		return;
+	pair<int, int> now = cctv[index];
+	for (int dir = 0; dir < 4; dir++)
+	{
+		if (board[now.first][now.second] == 1)
+		{
+			upd(now.first, now.second, dir, 0, index);
+		}
+		else if (board[now.first][now.second] == 2)
+		{
+			upd(now.first, now.second, dir, 0, index);
+			upd(now.first, now.second, dir + 2, 0, index);
+		}
+		else if (board[now.first][now.second] == 3)
+		{
+			upd(now.first, now.second, dir, 0, index);
+			upd(now.first, now.second, dir + 1, 0, index);
+		}
+		else if (board[now.first][now.second] == 4)
+		{
+			upd(now.first, now.second, dir, 0, index);
+			upd(now.first, now.second, dir + 1, 0, index);
+			upd(now.first, now.second, dir + 2, 0, index);
+		}
+		else if (board[now.first][now.second] == 5)
+		{
+			upd(now.first, now.second, dir, 0, index);
+			upd(now.first, now.second, dir + 1, 0, index);
+			upd(now.first, now.second, dir + 2, 0, index);
+			upd(now.first, now.second, dir + 3, 0, index);
+		}
+		int _min = 0;
+		for (int i = 0; i < n; i++)
+			for (int j = 0; j < m; j++)
+				if (board[i][j] == 0)
+					_min++;
+		// for (int i = 0; i < n; i++)
+		// {
+		// 	for (int j = 0; j < m; j++)
+		// 	{
+		// 		cout << board[i][j] << ' ';
+		// 	}
+		// 	cout << '\n';
+		// }
+		// cout << '\n';
+		ans = min(ans, _min);
+		solve(index + 1);
+		if (board[now.first][now.second] == 1)
+		{
+			upd(now.first, now.second, dir, 1, index);
+		}
+		else if (board[now.first][now.second] == 2)
+		{
+			upd(now.first, now.second, dir, 1, index);
+			upd(now.first, now.second, dir + 2, 1, index);
+		}
+		else if (board[now.first][now.second] == 3)
+		{
+			upd(now.first, now.second, dir, 1, index);
+			upd(now.first, now.second, dir + 1, 1, index);
+		}
+		else if (board[now.first][now.second] == 4)
+		{
+			upd(now.first, now.second, dir, 1, index);
+			upd(now.first, now.second, dir + 1, 1, index);
+			upd(now.first, now.second, dir + 2, 1, index);
+		}
+		else if (board[now.first][now.second] == 5)
+		{
+			upd(now.first, now.second, dir, 1, index);
+			upd(now.first, now.second, dir + 1, 1, index);
+			upd(now.first, now.second, dir + 2, 1, index);
+			upd(now.first, now.second, dir + 3, 1, index);
+		}
+	}
+}
 
-// 0 0 0 0 0 0
-// 0 0 0 0 0 0
-// 0 0 1 0 6 0
-// 0 0 0 0 0 0
-// 지도에서 0은 빈 칸, 6은 벽, 1~5는 CCTV의 번호이다. 위의 예시에서 1번의 방향에 따라 감시할 수 있는 영역을 '#'로 나타내면 아래와 같다.
-
-// 0 0 0 0 0 0
-// 0 0 0 0 0 0
-// 0 0 1 # 6 0
-// 0 0 0 0 0 0
-// 0 0 0 0 0 0
-// 0 0 0 0 0 0
-// # # 1 0 6 0
-// 0 0 0 0 0 0
-// 0 0 # 0 0 0
-// 0 0 # 0 0 0
-// 0 0 1 0 6 0
-// 0 0 0 0 0 0
-// 0 0 0 0 0 0
-// 0 0 0 0 0 0
-// 0 0 1 0 6 0
-// 0 0 # 0 0 0
-// →	←	↑	↓
-// CCTV는 벽을 통과할 수 없기 때문에, 1번이 → 방향을 감시하고 있을 때는 6의 오른쪽에 있는 칸을 감시할 수 없다.
-
-// 0 0 0 0 0 0
-// 0 2 0 0 0 0
-// 0 0 0 0 6 0
-// 0 6 0 0 2 0
-// 0 0 0 0 0 0
-// 0 0 0 0 0 5
-// 위의 예시에서 감시할 수 있는 방향을 알아보면 아래와 같다.
-
-// 0 0 0 0 0 #
-// # 2 # # # #
-// 0 0 0 0 6 #
-// 0 6 # # 2 #
-// 0 0 0 0 0 #
-// # # # # # 5
-// 0 0 0 0 0 #
-// # 2 # # # #
-// 0 0 0 0 6 #
-// 0 6 0 0 2 #
-// 0 0 0 0 # #
-// # # # # # 5
-// 0 # 0 0 0 #
-// 0 2 0 0 0 #
-// 0 # 0 0 6 #
-// 0 6 # # 2 #
-// 0 0 0 0 0 #
-// # # # # # 5
-// 0 # 0 0 0 #
-// 0 2 0 0 0 #
-// 0 # 0 0 6 #
-// 0 6 0 0 2 #
-// 0 0 0 0 # #
-// # # # # # 5
-// 왼쪽 상단 2: ↔, 오른쪽 하단 2: ↔	왼쪽 상단 2: ↔, 오른쪽 하단 2: ↕	왼쪽 상단 2: ↕, 오른쪽 하단 2: ↔	왼쪽 상단 2: ↕, 오른쪽 하단 2: ↕
-// CCTV는 CCTV를 통과할 수 있다. 아래 예시를 보자.
-
-// 0 0 2 0 3
-// 0 6 0 0 0
-// 0 0 6 6 0
-// 0 0 0 0 0
-// 위와 같은 경우에 2의 방향이 ↕ 3의 방향이 ←와 ↓인 경우 감시받는 영역은 다음과 같다.
-
-// # # 2 # 3
-// 0 6 # 0 #
-// 0 0 6 6 #
-// 0 0 0 0 #
-// 사무실의 크기와 상태, 그리고 CCTV의 정보가 주어졌을 때, CCTV의 방향을 적절히 정해서, 사각 지대의 최소 크기를 구하는 프로그램을 작성하시오.
-
-// 입력
-// 첫째 줄에 사무실의 세로 크기 N과 가로 크기 M이 주어진다. (1 ≤ N, M ≤ 8)
-
-// 둘째 줄부터 N개의 줄에는 사무실 각 칸의 정보가 주어진다. 0은 빈 칸, 6은 벽, 1~5는 CCTV를 나타내고, 문제에서 설명한 CCTV의 종류이다.
-
-// CCTV의 최대 개수는 8개를 넘지 않는다.
-
-// 출력
-// 첫째 줄에 사각 지대의 최소 크기를 출력한다.
+int main()
+{
+	ios::sync_with_stdio(0);
+	cin.tie(0);
+	cin >> n >> m;
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < m; j++)
+		{
+			cin >> board[i][j];
+			if (board[i][j] > 0 && board[i][j] <= 5)
+				cctv.push_back(make_pair(i, j));
+			if (board[i][j] == 0)
+				ans++;
+		}
+	}
+	solve(0);
+	cout << ans;
+}
